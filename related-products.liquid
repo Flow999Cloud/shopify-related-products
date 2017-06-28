@@ -1,0 +1,43 @@
+<div class="container related-product-continer">
+  
+<h3> Related Products </h3>
+
+  
+{% if collection %}
+
+{% assign skus = '' %}
+
+{% for tag in product.tags %}
+
+{% if tag contains 'related-' %}
+
+{% assign sku = tag | remove : 'related-' %}
+
+{% assign skus = skus | append : sku %}
+
+{% assign skus = skus | append : ',' %}
+
+{% endif %}
+
+{% endfor %}
+
+{% assign skus = skus | split : ',' %}
+
+{% paginate collection.products by 99999 %}
+
+{% for related in collection.products %}
+
+{% if skus contains related.variants.first.sku %}
+
+ {% include 'product-block' , product : related %}
+
+{% endif %}
+
+{% endfor %}
+
+{% endpaginate %}
+
+{% endif %}
+  
+</div>
+  
