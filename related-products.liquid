@@ -1,43 +1,114 @@
-<div class="container related-product-continer">
+<div class="container">
+  {% if search.performed and search.terms != "" %}
+  {% paginate search.results by settings.pagination_limit %}
   
-<h3> Related Products </h3>
-
+  {% if search.results == empty %}
   
-{% if collection %}
+  <h1 class="page-title">{{ 'general.search.no_results_title' | t }}</h1>
+  <span class="subtext">{{ 'general.search.no_results_html' | t: search: search.terms }}</span>
 
-{% assign skus = '' %}
+  <form class="section" action="/search">
+    <div class="inline-input-button">
+      
+      {% comment %} Remove the following line to search everything, not just products {% endcomment %}
+      <input type="hidden" name="type" value="product">
+      
+      <input type="text" name="q" placeholder="{{ 'general.search.placeholder' | t }}" value="{{ search.terms | escape }}"  />
+      <button>{{ 'general.search.search_button' | t }}</button>
+    </div>
+  </form>
 
-{% for tag in product.tags %}
-
-{% if tag contains 'related-' %}
-
-{% assign sku = tag | remove : 'related-' %}
-
-{% assign skus = skus | append : sku %}
-
-{% assign skus = skus | append : ',' %}
-
-{% endif %}
-
-{% endfor %}
-
-{% assign skus = skus | split : ',' %}
-
-{% paginate collection.products by 99999 %}
-
-{% for related in collection.products %}
-
-{% if skus contains related.variants.first.sku %}
-
- {% include 'product-block' , product : related %}
-
-{% endif %}
-
-{% endfor %}
-
-{% endpaginate %}
-
-{% endif %}
+  {% else %}
   
+  <h1 class="page-title">{{ 'general.search.results_title' | t }}</h1>
+    
+  <form class="inline-input-button lightly-spaced-row" action="/search">
+    
+    {% comment %} Remove the following line to search everything, not just products {% endcomment %}
+    <input type="hidden" name="type" value="product">
+    
+    <input type="text" name="q" placeholder="{{ 'general.search.placeholder' | t }}" value="{{ search.terms | escape }}"  />
+    <button>{{ 'general.search.search_button' | t }}</button>
+  </form>
+  
+  <!-- Begin results -->
+  <div class="product-list row grid" data-normheights=".image" data-normheights-inner="img">
+    {% for item in search.results %}
+    {% if item.object_type == 'product' %}
+      {% assign product = item %}
+      {% include 'product-block' %}
+    {% else %}
+    
+    {% assign mod4 = forloop.index | modulo: 4 %}
+    {% assign mod3 = forloop.index | modulo: 3 %}
+    {% assign mod2 = forloop.index | modulo: 2 %}
+    <div class="product-block page-block flex column max-cols-{{ settings.products_per_row }} {% if mod2 == 1 %} nth-2{% endif %}{% if mod3 == 1 %} nth-3{% endif %}{% if mod4 == 1 %} nth-4{% endif %}">
+      <div class="text-cont">
+        {% if item.object_type == 'article' and item.image %}
+        <div class="article-image">{{ item.image | img_url: 'grande' | img_tag | link_to: item.url }}</div>
+        {% endif %}
+        <h4><a href="{{ item.url }}">{{ item.title }}</a></h4>
+        <div><a href="{{ item.url }}">{{ item.content | strip_html | truncatewords: 25 | highlight: search.terms }}</a></div>
+        <a class="more-link" href="{{ item.url }}">{{ 'general.search.read_more' | t }}</a>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+  <!-- End results -->
+  
+  {% if paginate.pages > 1 %}
+  </div>
+  <div class="border-top">
+    <div class="container">
+      <div class="inline-row cf">
+        <span class="inline-item left pagination">{{ 'collections.general.results' | t: count: paginate.items }}</span>
+        <div class="inline-item right last">{% include 'pagination' %}</div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% endif %}
+
+  {% endpaginate %}
+    
+  {% if settings.coll_infiniscroll %}
+  {{ 'jquery.infinitescroll.min.js' | asset_url | script_tag }}
+  <script>
+    $(window).on('load', function(){
+      $('.product-list').infinitescroll({
+        navSelector  : ".pagination",
+        nextSelector : ".pagination .next",
+        itemSelector : ".product-list .product-block",
+        loading: {
+          img         : {{ 'loading.gif' | asset_url | json }},
+          msgText     : {{ 'collections.infinite_scroll.loading' | t | json }},
+          finishedMsg : {{ 'collections.infinite_scroll.no_more' | t | json }}
+        },
+        pathParse:function(path,nextPage){
+          return path.match(/^(.*page=)[0-9]*(&.*)?$/).splice(1);
+        }
+      }, function(newElements){
+        $(newElements).imagesLoaded(function(){
+          $(window).trigger('resize');
+        });
+      });
+    });
+  </script>
+  {% endif %}
+  
+  {% else %}
+  
+  <form class="section align-centre" action="/search">
+    <div class="inline-input-button">
+      
+      {% comment %} Remove the following line to search everything, not just products {% endcomment %}
+      <input type="hidden" name="type" value="product">
+      
+      <input type="text" name="q" placeholder="{{ 'general.search.placeholder' | t }}" value="{{ search.terms | escape }}"  />
+      <button>{{ 'general.search.search_button' | t }}</button>
+    </div>
+  </form>
+
+  {% endif %}	
 </div>
-  
