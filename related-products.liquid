@@ -1,16 +1,6 @@
 <div class="row container related-product-continer">
   
 <h3> Related Products </h3>
-
-{% if collection %}
-  
-  {% assign main_collection = collection %}
-  
-{% else %}
-
-  {% assign main_collection = product.collections.last %}
-  
-{% endif %}
   
 {% assign skus = '' %}
 
@@ -20,37 +10,74 @@
 
     {% assign sku = tag | remove : 'related-' %}
 
-    {% assign skus = skus | append : sku %}
+  	  {% assign skus = skus | append : sku %}
 
     {% assign skus = skus | append : ',' %}
-
+  
   {% endif %}
   
 {% endfor %}
 
 {% assign skus = skus | split : ',' %}
-
-{% paginate main_collection.products by 99999 %}
-
-  {% for related in main_collection.products %}
-
-    {% for member in skus %}
-
-      {% if related.variants.first.sku contains member %}
-
-      {% unless product.title == related.title %}
-              
-         {% include 'product-block' , product : related %}
   
-      {% endunless %}
 
-      {% endif %}
+{% if collection %}
+  
+  {% assign main_collection = collection %}
+  
+  {% paginate main_collection.products by 99999 %}
+
+    {% for related in main_collection.products %}
+
+      {% for member in skus %}
+
+        {% if related.variants.first.sku contains member %}
+
+          {% unless product.title == related.title %}
+
+             {% include 'product-block' , product : related %}
+
+          {% endunless %}
+
+        {% endif %}
+
+      {% endfor %}
 
     {% endfor %}
 
-  {% endfor %}
+  {% endpaginate %}
+  
+{% else %}
 
-{% endpaginate %}
+  {% assign main_collections = product.collections %}
+  
+  {% for main_collection in main_collections %}
+  
+    {% paginate main_collection.products by 99999 %}
+
+      {% for related in main_collection.products %}
+
+        {% for member in skus %}
+
+          {% if related.variants.first.sku contains member %}
+
+            {% unless product.title == related.title %}
+
+               {% include 'product-block' , product : related %}
+
+            {% endunless %}
+
+          {% endif %}
+
+        {% endfor %}
+
+      {% endfor %}
+
+    {% endpaginate %}
+  
+  {% endfor %}
+  
+{% endif %}
   
 </div>
   
