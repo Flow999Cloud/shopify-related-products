@@ -19,7 +19,6 @@
 {% endfor %}
 
 {% assign skus = skus | split : ',' %}
-  
 
 {% if collection %}
   
@@ -51,19 +50,43 @@
 
   {% assign main_collections = product.collections %}
   
+  {% assign similar_list = '' %}
+  
   {% for main_collection in main_collections %}
   
-    {% paginate main_collection.products by 99999 %}
+    {% paginate main_collection.products by 999999 %}
 
       {% for related in main_collection.products %}
-
+  
         {% for member in skus %}
-
+  
           {% if related.variants.first.sku contains member %}
 
             {% unless product.title == related.title %}
+  
+  				{% assign similar_lists = similar_list | split : ',' %}
+  
+  				{% assign nAlreadyExist = false %}
+  
+  				{% for similar_title in similar_lists %}
+  
+  					{% if similar_title == related.title %}
+  
+  						{% assign nAlreadyExist = true %}   
 
-               {% include 'product-block' , product : related %}
+  					{% endif %}	
+  
+  				{% endfor %}
+  				
+  				{% unless nAlreadyExist == true %}
+  
+  					{% assign similar_list = similar_list | append : related.title %}
+  
+                    {% assign similar_list = similar_list | append : ',' %}
+  
+                    {% include 'product-block' , product : related %}
+  
+  				{% endunless%}
 
             {% endunless %}
 
